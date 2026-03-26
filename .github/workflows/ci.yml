@@ -1,0 +1,29 @@
+# Developer melakukan pull request ke remote repository.
+# GitHub akan menjalankan action (CI) untuk menjalankan pengujian otomatis aplikasi Open Space.
+# Jika pengujiannya lulus, pull request akan di-merge. Namun, jika gagal, pull request akan ditutup.
+# Setelah di-merge, kode di branch utama pada remote repository akan berubah. Hal ini akan memicu Vercel untuk men-deploy aplikasi Open Space dengan kode terbaru.
+
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  automation-test-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install and test
+        run: |
+          npm install
+          npm run ci:test
+# Ketahuilah bahwa npm runner scripts yang ada saat ini tidak cocok digunakan untuk proses pengujian di CI karena prosesnya berjalan tanpa henti. Contohnya, npm test, ia akan menjalankan pengujian Vitest dengan mode watch yang artinya proses tidak akan dihentikan karena perlu membaca perubahan kode yang ada. Begitu juga dengan npm run dev yang dibutuhkan sebelum menjalankan end-to-end test.
+
+# Proses CI dijalankan pada mode non-gui alias command line dan tanpa campur tangan manusia. Kita tidak bisa standby untuk membatalkan proses dengan menekan CTRL + C layaknya fase development. Atas dasar alasan tersebut, kita membutuhkan npm runner script baru yang dapat menjalankan pengujian tanpa mode watch. Runner script ini kami namakan dengan ci:test.
